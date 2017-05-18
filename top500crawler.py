@@ -35,8 +35,10 @@ categories = [
 import requests
 from lxml import html as H 
 from urlparse import urlparse,parse_qs
+import progressbar
 
-
+bar = progressbar.ProgressBar(max_value=len(categories) * 540)
+acc = 0
 
 for cat in categories:
     data = {
@@ -44,8 +46,12 @@ for cat in categories:
         "number": 60,
         "token" : "v9gtze_L-6ptX6_OE4C603pikN8:1447050625753"
     }
+    print cat
 
+    f = open("APP_LIST/"+cat ,"w")
     for i in range(0,500,60):
+	acc += 60
+	bar.update(acc)
         data["start"] = i
         html = requests.post("https://play.google.com/store/apps/category/%s/collection/topselling_free" % (cat), data=data).text
         tree = H.fromstring(html)
@@ -53,8 +59,9 @@ for cat in categories:
         r = tree.xpath(r"//a[@class='title']")
 	for ele in r:
 		qs = parse_qs(urlparse(ele.get('href')).query)
-		apkid = qs["id"]
+		apkid = qs["id"][0]
 		number = ele.text.split()[0].strip().rstrip(".")
+		f.write("%s %s\n" % (apkid, number))
 
-		print apkid, number
+    f.close()
 
